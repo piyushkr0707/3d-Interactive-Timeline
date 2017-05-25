@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>	highway timeline	</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable = no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+			
+				margin: 0px;
+				overflow: hidden;
+			}
+			
+			canvas
+			{background-image:url("images/BG@2x.jpg");
+			}
+			
+		</style>
+	</head>
+	<body>
+
+		<script src="js/three.min.js"></script>      					<!-- A JS API for three Dimensional Drawing -->
+		<script src="js/icon_creation.js"></script>  					<!-- Task asset i.e  icons are created through this file  -->
+		<script src="js/boundary_lines.js"></script>					<!-- Lines that separate each months are created here  -->
+		<script src="js/fonts/helvetiker_regular.typeface.js"></script>
+		<script src="js/text.js"></script> 								<!--  Month name is written through this file -->
+								<!--  it helps in creating Movie option bar at the bottom -->
+		<script src="js/jquery-1.11.1.min.js"></script>					
+		<script src="js/movie_option_planes.js"></script>				
+		</script>
+		
+		<script>
+		
+		// this section helps in scrolling effect of icons on pressing UP or Down arrow
+		$(document).ready(function(){
+
+		var mouseStillDown = false;
+
+			  $('#btnUp').mousedown(function() {               // icon will keep on moving till button is pressed .
+				move_up();
+			  }).mouseup(function() {
+				clearInterval(mouseStillDown);
+				mouseStillDown = false;
+			  });
+
+			  function move_up() 
+			  {
+			   //m++;
+			   m+=4;
+				if (!mouseStillDown) 
+				{
+				  mouseStillDown = setInterval(move_up, 100);
+				}
+
+			  }
+			  
+			   $('#btnDown').mousedown(function() {
+				move_down();
+			  }).mouseup(function() {
+				clearInterval(mouseStillDown);
+				mouseStillDown = false;
+			  });
+
+			  function move_down() 
+			  {
+			   //m--;
+			   m-=4;
+				if (!mouseStillDown) 
+				{
+				  mouseStillDown = setInterval(move_down, 100);
+				}
+
+			  }
+
+		});
+		
+		
+		</script>
+	
+		<script>
+			mid_pos = new Array();
+			var container, stats;
+			var camera, scene, projector, raycaster, renderer, parentTransform, sphereInter,parentgroup;
+			 m=0; 
+					 
+			var mouse = new THREE.Vector2();
+			var radius = 100, theta = 0,   x_coordinate = 40;
+			var currentIntersected;
+			
+					var windowHalfX = window.innerWidth / 2;
+					var windowHalfY = window.innerHeight / 2;
+
+					
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement('div');
+				document.body.appendChild( container );
+				container.style.backgroundImage="url('images/BG@2x.jpg')";
+				
+			
+				var nav = document.createElement( 'div' );					// nav div contains up and down arrow
+				nav.style.position = 'absolute';
+				nav.style.top = '40%';
+				nav.style.width = '100px';
+				nav.style.height = '164px';
+				nav.style.left = '20%';
+			
+				container.appendChild( nav ); 
+			
+				
+				var btnUp   = document.createElement("div");
+				btnUp.setAttribute("id","btnUp");
+				btnUp.style.backgroundImage ="url('images/uparrow.png')";
+				btnUp.style.width = '64px';
+				btnUp.style.height = '64px';
+				nav.appendChild( btnUp ); 
+				
+				var btnDown   = document.createElement("div");
+				btnDown.setAttribute("id","btnDown");
+				btnDown.style.backgroundImage ="url('images/downarrow.png')";
+				btnDown.style.width = '64px';
+				btnDown.style.height = '64px';
+				nav.appendChild( btnDown ); 
+	
+				container.appendChild( nav ); 
+				
+				
+				description = document.createElement('div');				// div contains description of icon over mouse is hovering
+				description.style.position='absolute';
+				description.style.top = '10%';
+				description.style.width = '15%';
+				
+				description.style.wordWrap='break-word';
+				
+			
+				description.style.left = '15%';				
+				description.style.backgroundColor='grey';
+				description.style.color='white';
+				
+				
+				description.style.borderRadius= '5px';
+				description.innerHTML="<b>DESCIRPTION </b><br> It stands for Online Editorial. ";
+				description.style.padding= "10px";
+				description.style.display="none";
+				container.appendChild(description);
+				
+				des_icon1 ="<b>DESCIRPTION </b><br> It stands for Online Editorial. ";
+				
+				
+// camera
+				camera = new THREE.PerspectiveCamera( 40, (window.innerWidth) / (window.innerHeight), 1, 10000 );
+													//( field of view ,  width / height , near point , faar point )
+//scene
+				scene = new THREE.Scene();
+								group1 = new THREE.Object3D();   // group1 is responsible for icon on leftmost icon 
+								//scene.add( group1 );
+								group2 = new THREE.Object3D();
+								//scene.add( group2 );
+								group3 = new THREE.Object3D();
+								//scene.add( group3 );
+								group4 = new THREE.Object3D();
+								//scene.add( group4 );
+								group5 = new THREE.Object3D();
+								//scene.add( group5 );
+								group6 = new THREE.Object3D();
+								//scene.add( group6 );
+								parentgroup = new THREE.Object3D();   // putting all 6 icons in a single packet
+									parentgroup.add(group1);
+									parentgroup.add(group2);
+									parentgroup.add(group3);
+									parentgroup.add(group4);
+									parentgroup.add(group5);
+									parentgroup.add(group6);
+									scene.add(parentgroup);
+								icon_creation();
+		//movie_option();
+		/*option1 = new THREE.Object3D();
+		scene.add( option1 );
+				// movie_option_planes();
+				option1.position.x= 0;
+				option1.position.y=-13;
+				option1.position.z= 0;//-61;
+			*/		
+							movie_option_planes();    // this calls the function in movie_option_planes.js . It helps in creating 
+							
+
+				 geometry = new THREE.Geometry();	// this is for storing all the vertices .
+
+				var point = new THREE.Vector3();		// for storing all the points which will make vertices.
+				var direction = new THREE.Vector3();   // this the direction vector which will take in the exponential graph .
+
+			
+			  var counter=0;
+					for ( var i = 5; i <60 ;i+=0.5 ) 
+					{  
+				
+					direction.x =i+100;
+					direction.y =Math.pow(1.1,i);				// this gives the path the required exponential curve which seems like highway
+					direction.z = 0;
+
+					direction.normalize().multiplyScalar( 5 );
+
+					point.add( direction );
+
+					geometry.vertices.push( point.clone() );		// geometry.vertices[] is array containing all the vertices on the path .
+
+				}
+
+				parentTransform = new THREE.Object3D(); 
+			
+				var pos_z_axis=-51.0; var pos1 ,pos2 ;
+				
+			
+				for ( var i = 0; i < 6; i ++ ) 				// creates six sets of path .
+				{
+					   if(i%2 ==0)
+					     path_color= 0xDCDCDC;// light grey
+						else
+						 path_color=0x808080;	 // dark grey;
+						
+					
+						
+							
+							
+					for ( var j = 1; j <=32; j ++ ) 		// each set contains 32 individual lines to from a plane collectively.
+					{ 	  	if(j==1)
+							{pos1 = pos_z_axis;	}
+							if(j==32)
+							{pos2 = pos_z_axis;	}
+							
+						var object = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: path_color } ), THREE.LineStrip );
+						object.material.linewidth = 4; //5
+						pos_z_axis +=0.5;
+						object.position.z =pos_z_axis; 
+			
+					parentTransform.add( object );
+					}
+					
+					pos_z_axis +=1.2;  //2
+					
+					
+					if(i>=0)
+					{
+					mid_pos[i]= ( pos1 + pos2 )/2;  // calculates the mid position on each path where each icon should move.
+
+					console.log(mid_pos[i]);
+					
+					}
+				
+					
+				}
+
+				scene.add(parentTransform);		// adding all the paths to the scene .
+			
+				
+				projector = new THREE.Projector(); 
+				raycaster = new THREE.Raycaster();
+
+				renderer = new THREE.CanvasRenderer();
+			
+				
+			
+				update_lines(geometry,0); // it calls the function in boundary_lines.js
+				
+				createLabel(geometry) ;	// it calls the text.js 
+				
+			
+				renderer.setSize( window.innerWidth/1, window.innerHeight/1);
+
+				container.appendChild(renderer.domElement);
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				window.addEventListener( 'resize', onWindowResize, false );
+				
+
+				}
+
+			function onWindowResize() {
+									windowHalfX = window.innerWidth / 2;
+									windowHalfY = window.innerHeight / 2;
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+				
+
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+			}
+
+
+			function animate() 
+			{ 
+
+				requestAnimationFrame( animate );
+
+				render();
+		
+			
+			}
+			
+			
+			function render() 
+			{
+			
+			  group1.position.z=mid_pos[0] ;
+			  group1.position.x=geometry.vertices[m].x ;    // m is the index value changed by pressing the up or down arrow.
+			  group1.position.y=geometry.vertices[m].y+5 ;
+
+			  group2.position.z=mid_pos[1] ;
+			  group2.position.x=geometry.vertices[m+22].x ;
+			  group2.position.y=geometry.vertices[m+22].y+5 ;
+			  
+			  group3.position.z=mid_pos[2] ;
+			  group3.position.x=geometry.vertices[m+46].x ;
+			  group3.position.y=geometry.vertices[m+46].y+5 ;
+			  
+			  group4.position.z=mid_pos[3] ;
+			  group4.position.x=geometry.vertices[m+60].x ;
+			  group4.position.y=geometry.vertices[m+60].y+5 ;
+			  
+			  group5.position.z=mid_pos[4] ;
+			  group5.position.x=geometry.vertices[m+84].x ;
+			  group5.position.y=geometry.vertices[m+84].y+5 ;
+			  
+			  group6.position.z=mid_pos[5] ;
+			  group6.position.x=geometry.vertices[m].x ;
+			  group6.position.y=geometry.vertices[m].y+5 ;
+			    
+			 // line position 
+
+ 
+					
+   			 update_lines(geometry,m);   // this move the lines which separates the month . It is in boundary_lines.js
+		
+   
+			 move_lable(geometry,m)			// it moves the Month name . It is in text.js
+			  
+				
+				camera.position.y = 50;
+				camera.position.z = 00;
+				camera.position.x = -200;
+
+				camera.lookAt( scene.position );
+		
+
+		// find intersections
+
+				var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+				projector.unprojectVector( vector, camera );
+
+				raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+
+				
+				  var intersects = raycaster.intersectObjects( parentgroup.children, true);
+					
+					
+				if ( intersects.length > 0 ) {
+
+					if ( currentIntersected !== undefined ) {
+						description.style.display="none";
+						
+
+					}
+						
+					currentIntersected = intersects[ 0 ].object;
+				
+					if(parentgroup.children=="group1")
+					console.log("yes");
+				
+					description.style.display="block";
+					
+
+				} else {
+
+					if ( currentIntersected !== undefined ) {
+
+						
+
+					}
+
+					currentIntersected = undefined;
+					description.style.display="none";
+					
+
+				}
+
+				renderer.render( scene, camera );   // Most important function of all . 
+													//it renders the scene and everything that we have been drawing on the canvas.
+				
+			}
+
+		</script>
+		
+	</body>
+</html>
